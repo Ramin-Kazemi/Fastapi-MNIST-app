@@ -50,7 +50,7 @@ pip install fastapi "uvicorn[standard]" scikit-learn numpy pillow python-multipa
 
 The main application (main.py) requires a pre-trained model file named mnist_model.pkl. You must run the training script once.
 
-python train_model.py
+python mlmodel.py
 
 
 (This script will download the MNIST dataset, train a Random Forest classifier, and save the resulting model as mnist_model.pkl.)
