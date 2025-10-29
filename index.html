@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI MNIST Classifier</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        h1 { color: #333; text-align: center; }
+        #form-container { display: flex; flex-direction: column; gap: 15px; }
+        #file-input { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        #submit-btn { padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        #submit-btn:hover { background-color: #0056b3; }
+        #result-container { margin-top: 20px; padding: 15px; border: 2px solid #28a745; background-color: #e6ffed; border-radius: 4px; text-align: center; }
+        #result-text { font-size: 24px; font-weight: bold; color: #28a745; }
+        #loading { display: none; color: #007bff; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>MNIST Digit Classifier</h1>
+    <p>Upload a grayscale image (preferably 28x28 or a square) of a handwritten digit (0-9).</p>
+
+    <div id="form-container">
+        <input type="file" id="file-input" accept="image/*">
+        <button id="submit-btn" onclick="predictDigit()">Predict Digit</button>
+    </div>
+
+    <div id="loading">...Predicting...</div>
+    
+    <div id="result-container" style="display: none;">
+        <p>The model predicts the digit is:</p>
+        <p id="result-text">?</p>
+    </div>
+
+    <script>
+        // Function to handle the prediction request
+        async function predictDigit() {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            const resultContainer = document.getElementById('result-container');
+            const resultText = document.getElementById('result-text');
+            const loading = document.getElementById('loading');
+
+            if (!file) {
+                alert("Please select an image file first.");
+                return;
+            }
+            
+            // Show loading message and hide previous result
+            loading.style.display = 'block';
+            resultContainer.style.display = 'none';
+            resultText.textContent = '?';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                // Send the image to the FastAPI endpoint
+                const response = await fetch('/predict/', {
+                    method: 'POST',
+                    body: formData, // FormData sends the file correctly
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Display the prediction
+                loading.style.display = 'none';
+                if (data.prediction) {
+                    resultText.textContent = data.prediction;
+                    resultContainer.style.display = 'block';
+                } else if (data.error) {
+                    resultText.textContent = `ERROR: ${data.error}`;
+                    resultContainer.style.display = 'block';
+                }
+
+            } catch (error) {
+                loading.style.display = 'none';
+                resultText.textContent = `Failed to connect to server: ${error.message}`;
+                resultContainer.style.display = 'block';
+                console.error('Prediction failed:', error);
+            }
+        }
+    </script>
+
+</body>
+</html>
